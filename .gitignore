@@ -205,3 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Logs 資料夾內容（保留 .gitkeep）
+logs/*
+!logs/.gitkeep
