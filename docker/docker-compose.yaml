@@ -3,11 +3,18 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    image: nk7260ynpa/tw-stock-webpage:latest
     container_name: tw-stock-webpage
     ports:
-      - "8501:8501"
+      - "7938:8501"
     volumes:
       - ../logs:/app/logs
     environment:
       - TZ=Asia/Taipei
+    networks:
+      - db_network
     restart: unless-stopped
+
+networks:
+  db_network:
+    external: true

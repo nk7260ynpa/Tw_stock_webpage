@@ -5,11 +5,18 @@
 set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly IMAGE_NAME="tw-stock-webpage"
+readonly IMAGE_NAME="nk7260ynpa/tw-stock-webpage"
 readonly CONTAINER_NAME="tw-stock-webpage"
+readonly NETWORK_NAME="db_network"
 
 # 確保 logs 資料夾存在
 mkdir -p "${SCRIPT_DIR}/logs"
+
+# 確保 Docker network 存在
+if ! docker network ls --format '{{.Name}}' | grep -q "^${NETWORK_NAME}$"; then
+  echo "建立 Docker network: ${NETWORK_NAME}"
+  docker network create "${NETWORK_NAME}"
+fi
 
 # 建立 Docker image（如果尚未建立）
 bash "${SCRIPT_DIR}/docker/build.sh"
@@ -25,9 +32,10 @@ fi
 echo "啟動 container: ${CONTAINER_NAME}"
 docker run -d \
   --name "${CONTAINER_NAME}" \
-  -p 8501:8501 \
+  --network "${NETWORK_NAME}" \
+  -p 7938:8501 \
   -v "${SCRIPT_DIR}/logs:/app/logs" \
   -e TZ=Asia/Taipei \
   "${IMAGE_NAME}:latest"
 
-echo "應用程式已啟動，請開啟瀏覽器前往 http://localhost:8501"
+echo "應用程式已啟動，請開啟瀏覽器前往 http://localhost:7938"

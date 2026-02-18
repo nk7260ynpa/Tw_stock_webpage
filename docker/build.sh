@@ -6,7 +6,7 @@ set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
-readonly IMAGE_NAME="tw-stock-webpage"
+readonly IMAGE_NAME="nk7260ynpa/tw-stock-webpage"
 readonly IMAGE_TAG="latest"
 
 echo "正在建立 Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
