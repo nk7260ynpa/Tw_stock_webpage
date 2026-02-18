@@ -206,6 +206,16 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# Node.js
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 前端建置產出
+static/
+
 # Logs 資料夾內容（保留 .gitkeep）
 logs/*
 !logs/.gitkeep

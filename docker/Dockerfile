@@ -1,3 +1,15 @@
+# 第一階段：建置前端
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /frontend
+
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install
+
+COPY frontend/ ./
+RUN npm run build
+
+# 第二階段：建置後端
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -13,8 +25,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 複製專案程式碼
-COPY . .
+COPY src/ ./src/
+COPY tests/ ./tests/
 
-EXPOSE 8501
+# 複製前端建置產出
+COPY --from=frontend-builder /static ./static/
 
-CMD ["streamlit", "run", "src/app.py", "--server.address", "0.0.0.0", "--server.port", "8501"]
+EXPOSE 8000
+
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

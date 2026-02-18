@@ -33,7 +33,7 @@ echo "啟動 container: ${CONTAINER_NAME}"
 docker run -d \
   --name "${CONTAINER_NAME}" \
   --network "${NETWORK_NAME}" \
-  -p 7938:8501 \
+  -p 7938:8000 \
   -v "${SCRIPT_DIR}/logs:/app/logs" \
   -e TZ=Asia/Taipei \
   "${IMAGE_NAME}:latest"
