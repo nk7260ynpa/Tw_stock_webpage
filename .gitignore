@@ -216,6 +216,9 @@ yarn-error.log*
 # 前端建置產出
 static/
 
+# Claude Code
+CLAUDE.md
+
 # Logs 資料夾內容（保留 .gitkeep）
 logs/*
 !logs/.gitkeep
