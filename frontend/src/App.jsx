@@ -37,16 +37,34 @@ export default function App() {
     setError(null)
 
     try {
-      const [info, price, institutional, margin] = await Promise.all([
+      const results = await Promise.allSettled([
         fetchStockInfo(code),
         fetchPriceHistory(code),
         fetchInstitutional(code),
         fetchMargin(code),
       ])
-      setStockInfo(info)
-      setPriceData(price)
-      setInstitutionalData(institutional)
-      setMarginData(margin)
+
+      const [infoResult, priceResult, institutionalResult, marginResult] = results
+
+      // 基本資訊與股價為必要資料
+      if (infoResult.status === 'fulfilled') {
+        setStockInfo(infoResult.value)
+      } else {
+        setError('載入基本資訊失敗: ' + infoResult.reason?.message)
+      }
+
+      if (priceResult.status === 'fulfilled') {
+        setPriceData(priceResult.value)
+      }
+
+      // 三大法人與融資融券為輔助資料，失敗不影響主要顯示
+      if (institutionalResult.status === 'fulfilled') {
+        setInstitutionalData(institutionalResult.value)
+      }
+
+      if (marginResult.status === 'fulfilled') {
+        setMarginData(marginResult.value)
+      }
     } catch (err) {
       setError('載入資料失敗: ' + err.message)
     } finally {

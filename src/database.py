@@ -17,8 +17,8 @@ DB_USER = "root"
 DB_PASSWORD = "stock"
 DB_PORT = 3306
 
-# 支援的資料庫名稱
-DATABASE_NAMES = ["TWSE", "TPEX", "TAIFEX", "MGTS", "FAOI"]
+# 支援的資料庫名稱（FAOI/MGTS 資料存放於 TWSE 資料庫的 FAOIDailyPrice/MGTSDailyPrice 表）
+DATABASE_NAMES = ["TWSE", "TPEX", "TAIFEX"]
 
 # 連線池：每個資料庫一個 engine
 _engines = {}

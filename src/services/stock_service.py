@@ -312,7 +312,7 @@ def get_institutional(
                SecuritiesInvestmentDifference,
                DealersDifference,
                TotalDifference
-        FROM DailyPrice
+        FROM FAOIDailyPrice
         WHERE SecurityCode = :code
     """
     params: dict = {"code": code}
@@ -324,7 +324,7 @@ def get_institutional(
         params["end"] = end
     query += " ORDER BY Date"
 
-    rows = execute_query("FAOI", query, params)
+    rows = execute_query("TWSE", query, params)
 
     records = []
     for row in rows:
@@ -365,7 +365,7 @@ def get_margin(
                MarginPurchaseBalanceOfTheDay,
                ShortSale, ShortCovering,
                ShortSaleBalanceOfTheDay
-        FROM DailyPrice
+        FROM MGTSDailyPrice
         WHERE SecurityCode = :code
     """
     params: dict = {"code": code}
@@ -377,7 +377,7 @@ def get_margin(
         params["end"] = end
     query += " ORDER BY Date"
 
-    rows = execute_query("MGTS", query, params)
+    rows = execute_query("TWSE", query, params)
 
     records = []
     for row in rows:
