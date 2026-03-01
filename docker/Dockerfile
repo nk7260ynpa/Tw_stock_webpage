@@ -24,9 +24,13 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 複製專案程式碼
+# 複製專案程式碼與設定
+COPY pyproject.toml .
 COPY src/ ./src/
 COPY tests/ ./tests/
+
+# 以套件模式安裝專案
+RUN pip install --no-cache-dir .
 
 # 複製前端建置產出
 COPY --from=frontend-builder /static ./static/

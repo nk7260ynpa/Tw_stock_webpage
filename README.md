@@ -47,7 +47,8 @@ Tw_stock_webpage/
 ├── .gitignore
 ├── LICENSE
 ├── README.md
-├── requirements.txt               # Python 依賴套件
+├── pyproject.toml                 # Python 套件設定（PEP 621）
+├── requirements.txt               # Python 釘版依賴（Docker 環境用）
 └── run.sh                         # 啟動主程式腳本
 ```
 
