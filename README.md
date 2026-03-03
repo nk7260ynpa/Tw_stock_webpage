@@ -7,6 +7,9 @@
 
 ```text
 Tw_stock_webpage/
+├── .github/
+│   └── workflows/
+│       └── docker-publish.yml     # GitHub Actions CI/CD pipeline
 ├── docker/                        # Docker 相關檔案
 │   ├── build.sh                   # 建立 Docker image 的執行腳本
 │   ├── Dockerfile                 # 多階段建置（前端 + 後端）
@@ -109,6 +112,21 @@ bash docker/build.sh
 
 ```bash
 docker run --rm nk7260ynpa/tw-stock-webpage python -m pytest tests/ -v
+```
+
+## CI/CD
+
+本專案使用 GitHub Actions 自動建置並推送 Docker image 至 DockerHub。
+
+- **觸發條件**：推送版本 tag（格式 `v*.*.*`，例如 `v1.0.0`）
+- **自動產出**：版本號 tag（如 `1.0.0`）與 `latest` tag
+- **所需 Secrets**：`DOCKER_USERNAME`、`DOCKER_PASSWORD`
+
+### 發布新版本
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ## 授權
