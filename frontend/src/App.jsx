@@ -30,6 +30,17 @@ export default function App() {
       .catch((err) => setError('無法載入股票清單: ' + err.message))
   }, [])
 
+  // 從 URL 查詢參數自動選股（例如 ?code=2330）
+  useEffect(() => {
+    if (stocks.length > 0 && !selectedCode) {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      if (code) {
+        handleSelect(code)
+      }
+    }
+  }, [stocks])
+
   // 選擇股票後載入所有資料
   const handleSelect = useCallback(async (code) => {
     setSelectedCode(code)
