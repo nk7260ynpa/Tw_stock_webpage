@@ -4,6 +4,7 @@
 """
 
 import logging
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -26,10 +27,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 透過 Dashboard 反向代理（/app/webpage/）存取時，
+# 可由環境變數 ROOT_PATH 指定 root_path，讓 docs、OpenAPI 與 url_for 正確帶入前綴。
+# 直接存取（http://localhost:7938）則維持空字串。
+ROOT_PATH = os.environ.get("ROOT_PATH", "")
+
 app = FastAPI(
     title="台灣股票資訊 API",
     description="提供台灣上市櫃股票資訊查詢服務",
     version="1.0.0",
+    root_path=ROOT_PATH,
 )
 
 # CORS 設定（開發環境允許所有來源）

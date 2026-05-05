@@ -29,14 +29,16 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
 fi
 
 # 啟動 Docker container，掛載 logs 資料夾
+# 注意：不對外公開 port，僅透過 db_network 供其他容器以 tw-stock-webpage:8000 存取
+# ROOT_PATH=/app/webpage：透過 Dashboard 反向代理（http://localhost:8002/app/webpage/）存取
 echo "啟動 container: ${CONTAINER_NAME}"
 docker run -d \
   --name "${CONTAINER_NAME}" \
   --network "${NETWORK_NAME}" \
   --restart always \
-  -p 7938:8000 \
   -v "${SCRIPT_DIR}/logs:/app/logs" \
   -e TZ=Asia/Taipei \
+  -e ROOT_PATH=/app/webpage \
   "${IMAGE_NAME}:latest"
 
-echo "應用程式已啟動，請開啟瀏覽器前往 http://localhost:7938"
+echo "應用程式已啟動（透過 Dashboard 反向代理存取：http://localhost:8002/app/webpage/）"

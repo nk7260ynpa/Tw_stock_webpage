@@ -1,7 +1,13 @@
 import axios from 'axios'
 
+// 支援 Dashboard 反向代理：BASE_URL 由 Vite build 時注入
+// - 本地獨立存取：BASE_URL='/'（直接打到後端根路徑）
+// - Dashboard 代理：BASE_URL='/app/webpage/'（帶前綴存取）
+// 確保 baseURL 不以斜線結尾，避免雙斜線
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${BASE}/api`,
   timeout: 30000,
 })
 
