@@ -1,9 +1,15 @@
-# GitLab CI/CD：在 main 打上 vX.Y.Z 版本 tag 時，把儲存庫鏡像推送到 GitHub
+# GitLab CI/CD：在 main 打上 vX.Y.Z 版本 tag 時，重新部署本服務並把儲存庫鏡像推送到 GitHub
 #
 # ── 流程 ───────────────────────────────────────────────────────────
-#   feature 分支 → 開 Merge Request → 合併進 main（此時「不」觸發鏡像）
-#   → 在 main 最新 commit 打上 vX.Y.Z 版本 tag → 本管線於該 tag 觸發
-#   → 將 main 與該 tag 一併推送（鏡像）到 GitHub。
+#   feature 分支 → 開 Merge Request → 合併進 main（此時「不」觸發任何管線）
+#   → 在 main 最新 commit 打上 vX.Y.Z 版本 tag → 本管線於該 tag 觸發：
+#     1. deploy ：於 host daemon 本地 build 新 image 並重啟容器（自動重新部署）。
+#     2. mirror ：將 main 與該 tag 一併推送（鏡像）到 GitHub。
+#
+# ── 執行環境 ───────────────────────────────────────────────────────
+#   GitLab Runner 為 docker executor 並掛載 /var/run/docker.sock，因此 deploy job
+#   內的 `docker` 指令直接作用在「host Docker daemon」上；build 出的 image、啟動的
+#   容器與既有的 db_network 服務都在同一個 daemon，故新容器可直接接上 db_network。
 #
 # ── 認證來源 ───────────────────────────────────────────────────────
 #   GITHUB_SSH_KEY  由 GitLab Runner 注入（config.toml 的 environment 或掛載）。
@@ -15,6 +21,7 @@
 #   GIT_DEPTH: 0 取得完整歷史，避免 shallow clone 導致 GitHub 推送被拒。
 
 stages:
+  - deploy
   - mirror
 
 workflow:
@@ -22,9 +29,46 @@ workflow:
     # 僅在 main 打上 vX.Y.Z 版本 tag 時建立管線（合併進 main 當下不觸發）
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
+# ── deploy：tag 觸發後在 host 本地重新部署 ─────────────────────────────
+#   參數對齊本 repo 的 run.sh（image / 容器名 / network / env / Dockerfile）。
+#   差異：run.sh 以 bind mount 掛 logs/；CI 部署改用「具名 volume」存放 log，
+#   讓部署不依賴 Runner 工作目錄、log 跨容器重建持續保留。
+#   run.sh 不對外公開 port（僅透過 db_network 供 Dashboard 反向代理存取），
+#   故本 job 同樣不開 port。
+deploy:
+  stage: deploy
+  image: docker:27
+  needs: []
+  resource_group: deploy          # 序列化部署，避免同時兩條管線互踩
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+  variables:
+    IMAGE: "nk7260ynpa/tw-stock-webpage"
+    CONTAINER: "tw-stock-webpage"
+    LOGS_VOLUME: "tw-stock-webpage_logs"
+    LOGS_PATH: "/app/logs"
+  before_script:
+    - export VERSION="${CI_COMMIT_TAG#v}"
+  script:
+    # 嚴格維持 build → rm -f → run 順序：
+    #   先 build 成功才動既有容器，降低「舊容器已刪、新 image 卻 build 失敗」的空窗風險。
+    - docker build -f docker/Dockerfile -t "$IMAGE:$VERSION" -t "$IMAGE:latest" .
+    - docker rm -f "$CONTAINER" || true
+    - docker run -d
+        --name "$CONTAINER"
+        --restart=always
+        --network db_network
+        --volume "$LOGS_VOLUME:$LOGS_PATH"
+        -e TZ=Asia/Taipei
+        -e ROOT_PATH=/app/webpage
+        "$IMAGE:latest"
+    - docker image prune -f || true
+
+# ── mirror：把 main 與該 tag 鏡像推送到 GitHub ───────────────────────
 mirror-to-github:
   stage: mirror
   image: alpine:3.20
+  needs: []
   variables:
     GIT_DEPTH: 0                                       # 完整歷史，確保可 fast-forward 推送
     GITHUB_REPO: "git@github.com:nk7260ynpa/Tw_stock_webpage.git"
