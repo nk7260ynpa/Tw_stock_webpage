@@ -129,6 +129,15 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+### GitLab → GitHub 鏡像
+
+開發主線在自架 GitLab，GitHub 為對外鏡像。`.gitlab-ci.yml` 的 `mirror-to-github` job
+**僅在 `main` 打上 `vX.Y.Z` 版本 tag 時觸發**（合併進 `main` 當下不鏡像），
+觸發後會把 `main` 與該版本 tag 一併推送到 GitHub。
+
+- **觸發條件**：`$CI_COMMIT_TAG` 符合 `^v\d+\.\d+\.\d+$`（例如 `v1.0.1`）
+- **認證**：GitLab Runner 注入的 SSH deploy key（`GITHUB_SSH_KEY`）
+
 ## 授權
 
 本專案採用 MIT 授權條款，詳見 [LICENSE](LICENSE) 檔案。
