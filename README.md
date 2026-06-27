@@ -129,14 +129,26 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-### GitLab → GitHub 鏡像
+### GitLab CI/CD（自動部署 + 鏡像）
 
-開發主線在自架 GitLab，GitHub 為對外鏡像。`.gitlab-ci.yml` 的 `mirror-to-github` job
-**僅在 `main` 打上 `vX.Y.Z` 版本 tag 時觸發**（合併進 `main` 當下不鏡像），
-觸發後會把 `main` 與該版本 tag 一併推送到 GitHub。
+開發主線在自架 GitLab，GitHub 為對外鏡像。`.gitlab-ci.yml` **僅在 `main` 打上
+`vX.Y.Z` 版本 tag 時觸發**（合併進 `main` 當下不觸發），包含兩個 stage：
 
-- **觸發條件**：`$CI_COMMIT_TAG` 符合 `^v\d+\.\d+\.\d+$`（例如 `v1.0.1`）
-- **認證**：GitLab Runner 注入的 SSH deploy key（`GITHUB_SSH_KEY`）
+- **`deploy`**：於 GitLab Runner（docker executor、掛載 `/var/run/docker.sock`）內
+  直接對 **host Docker daemon** 操作，依序 `build → rm -f → run`：在 host 本地
+  build `nk7260ynpa/tw-stock-webpage:<版本>` 與 `:latest`，移除舊容器後以新 image
+  啟動 `tw-stock-webpage` 容器（接 `db_network`、`TZ=Asia/Taipei`、
+  `ROOT_PATH=/app/webpage`），達成「打 tag 即自動重新部署」。
+- **`mirror-to-github`**：把 `main` 與該版本 tag 一併推送（鏡像）到 GitHub。
+
+- **觸發條件**：`$CI_COMMIT_TAG` 符合 `^v\d+\.\d+\.\d+$`（例如 `v1.1.0`）
+- **認證**：GitLab Runner 注入的 SSH deploy key（`GITHUB_SSH_KEY`，僅 mirror 使用）
+- **Log 存放差異**：`run.sh` 以 bind mount 掛 `logs/`；**CI 部署改用具名 volume
+  `tw-stock-webpage_logs`**（掛載至容器 `/app/logs`），使 log 不依賴 Runner 工作目錄、
+  跨容器重建持續保留。
+- **對外 port**：`run.sh` 與 CI 部署皆**不公開 port**（僅透過 `db_network` 供
+  Dashboard 反向代理 `http://localhost:8002/app/webpage/` 存取）；需要直接存取
+  時改用 `docker compose up`（對外開 `7938`）。
 
 ## 授權
 
